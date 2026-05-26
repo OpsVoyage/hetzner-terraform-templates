@@ -42,7 +42,7 @@ output "ssh_key_name" {
 
 output "bastion_server_id" {
   description = "Hetzner Cloud server ID of the bastion (null if disabled)."
-  value       = var.bastion_enabled ? hcloud_server.bastion[0].id : null
+  value       = var.bastion_enabled ? module.bastion_server.first_id : null
 }
 
 output "bastion_public_ipv4" {
@@ -50,13 +50,13 @@ output "bastion_public_ipv4" {
   value = var.bastion_enabled ? (
     var.bastion_floating_ip_enabled
     ? hcloud_floating_ip.bastion[0].ip_address
-    : hcloud_server.bastion[0].ipv4_address
+    : module.bastion_server.first_ipv4
   ) : null
 }
 
 output "bastion_private_ip" {
   description = "Private IPv4 of the bastion within the private network."
-  value       = var.bastion_enabled ? hcloud_server_network.bastion[0].ip : null
+  value       = var.bastion_enabled ? module.bastion_server.first_private_ip : null
 }
 
 output "bastion_floating_ip" {
@@ -89,17 +89,17 @@ output "load_balancer_public_ipv6" {
 
 output "web_server_ids" {
   description = "List of Hetzner Cloud server IDs for the web tier."
-  value       = var.web_server_enabled ? [for s in hcloud_server.web : s.id] : []
+  value       = var.web_server_enabled ? module.web_servers.ids : []
 }
 
 output "web_server_names" {
   description = "List of server names for the web tier."
-  value       = var.web_server_enabled ? [for s in hcloud_server.web : s.name] : []
+  value       = var.web_server_enabled ? module.web_servers.names : []
 }
 
 output "web_server_private_ips" {
   description = "Private IPv4 addresses of web servers within the private network."
-  value       = var.web_server_enabled ? [for n in hcloud_server_network.web : n.ip] : []
+  value       = var.web_server_enabled ? module.web_servers.private_ips : []
 }
 
 # ==============================================================================
@@ -108,17 +108,17 @@ output "web_server_private_ips" {
 
 output "backend_server_ids" {
   description = "List of Hetzner Cloud server IDs for the backend tier."
-  value       = var.backend_server_enabled ? [for s in hcloud_server.backend : s.id] : []
+  value       = var.backend_server_enabled ? module.backend_servers.ids : []
 }
 
 output "backend_server_names" {
   description = "List of server names for the backend tier."
-  value       = var.backend_server_enabled ? [for s in hcloud_server.backend : s.name] : []
+  value       = var.backend_server_enabled ? module.backend_servers.names : []
 }
 
 output "backend_server_private_ips" {
   description = "Private IPv4 addresses of backend servers within the private network."
-  value       = var.backend_server_enabled ? [for n in hcloud_server_network.backend : n.ip] : []
+  value       = var.backend_server_enabled ? module.backend_servers.private_ips : []
 }
 
 # ==============================================================================
@@ -127,12 +127,12 @@ output "backend_server_private_ips" {
 
 output "database_server_id" {
   description = "Hetzner Cloud server ID of the database server (null if disabled)."
-  value       = var.database_enabled ? hcloud_server.database[0].id : null
+  value       = var.database_enabled ? module.database_server.first_id : null
 }
 
 output "database_server_private_ip" {
   description = "Private IPv4 of the database server within the private network."
-  value       = var.database_enabled ? hcloud_server_network.database[0].ip : null
+  value       = var.database_enabled ? module.database_server.first_private_ip : null
 }
 
 output "database_volume_id" {
@@ -190,10 +190,10 @@ output "summary" {
     }
 
     bastion = var.bastion_enabled ? {
-      id         = hcloud_server.bastion[0].id
-      name       = hcloud_server.bastion[0].name
-      public_ip  = var.bastion_floating_ip_enabled ? hcloud_floating_ip.bastion[0].ip_address : hcloud_server.bastion[0].ipv4_address
-      private_ip = hcloud_server_network.bastion[0].ip
+      id         = module.bastion_server.first_id
+      name       = module.bastion_server.first_name
+      public_ip  = var.bastion_floating_ip_enabled ? hcloud_floating_ip.bastion[0].ip_address : module.bastion_server.first_ipv4
+      private_ip = module.bastion_server.first_private_ip
     } : null
 
     load_balancer = var.load_balancer_enabled ? {
@@ -205,18 +205,18 @@ output "summary" {
     web_servers = {
       count       = var.web_server_enabled ? var.web_server_count : 0
       server_type = var.web_server_type
-      private_ips = var.web_server_enabled ? [for n in hcloud_server_network.web : n.ip] : []
+      private_ips = var.web_server_enabled ? module.web_servers.private_ips : []
     }
 
     backend_servers = {
       count       = var.backend_server_enabled ? var.backend_server_count : 0
       server_type = var.backend_server_type
-      private_ips = var.backend_server_enabled ? [for n in hcloud_server_network.backend : n.ip] : []
+      private_ips = var.backend_server_enabled ? module.backend_servers.private_ips : []
     }
 
     database = var.database_enabled ? {
       engine     = var.database_engine
-      private_ip = hcloud_server_network.database[0].ip
+      private_ip = module.database_server.first_private_ip
     } : null
   }
 }

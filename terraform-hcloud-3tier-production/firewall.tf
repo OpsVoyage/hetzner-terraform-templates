@@ -75,16 +75,16 @@ resource "hcloud_firewall" "backend" {
     direction   = "in"
     protocol    = "tcp"
     port        = "8080"
-    source_ips  = [var.network_subnet_servers]
-    description = "App traffic from web tier (private)"
+    source_ips  = [var.network_subnet_public]
+    description = "App traffic from web tier"
   }
 
   rule {
     direction   = "in"
     protocol    = "tcp"
     port        = "8443"
-    source_ips  = [var.network_subnet_servers]
-    description = "App TLS traffic from web tier (private)"
+    source_ips  = [var.network_subnet_public]
+    description = "App TLS traffic from web tier"
   }
 
   rule {
@@ -118,16 +118,16 @@ resource "hcloud_firewall" "database" {
     direction   = "in"
     protocol    = "tcp"
     port        = "5432"
-    source_ips  = [var.network_subnet_servers, var.network_subnet_db]
-    description = "PostgreSQL from app tiers"
+    source_ips  = [var.network_subnet_private, var.network_subnet_db]
+    description = "PostgreSQL from backend tier"
   }
 
   rule {
     direction   = "in"
     protocol    = "tcp"
     port        = "3306"
-    source_ips  = [var.network_subnet_servers, var.network_subnet_db]
-    description = "MySQL from app tiers"
+    source_ips  = [var.network_subnet_private, var.network_subnet_db]
+    description = "MySQL from backend tier"
   }
 
   rule {

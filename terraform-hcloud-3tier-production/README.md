@@ -148,7 +148,9 @@ terraform apply -var-file=terraform.tfvars
 | `network_ip_range` | string | `10.0.0.0/16` | Network CIDR |
 | `network_existing_id` | number | `null` | Reuse existing network by ID |
 | `network_existing_name` | string | `null` | Reuse existing network by name |
-| `network_subnet_servers` | string | `10.0.1.0/24` | Servers subnet CIDR |
+| `network_subnet_public` | string | `10.0.1.0/24` | Public (web) tier subnet CIDR |
+| `network_subnet_private` | string | `10.0.2.0/24` | Private (backend) tier subnet CIDR |
+| `network_subnet_db` | string | `10.0.3.0/24` | Database tier subnet CIDR |
 | `network_subnet_db` | string | `10.0.2.0/24` | Database subnet CIDR |
 
 ### SSH Keys

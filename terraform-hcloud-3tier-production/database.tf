@@ -13,34 +13,27 @@
 # Or supply them through OpsVoyage layer secrets.
 # ==============================================================================
 
-resource "hcloud_server" "database" {
-  count = var.database_enabled ? 1 : 0
+module "database_server" {
+  source = "./modules/server"
 
-  name        = "${local.name_prefix}-db"
-  server_type = var.database_server_type
-  image       = var.database_server_image
-  location    = var.location
-  ssh_keys    = local.all_ssh_keys
-  backups     = var.database_server_backups_enabled
-  user_data   = local.database_user_data
-  labels      = merge(local.common_labels, { role = "database", engine = var.database_engine })
-
-  public_net {
-    ipv4_enabled = var.database_server_public_ipv4_enabled
-    ipv6_enabled = false
-  }
-
-  placement_group_id = var.placement_group_enabled ? try(hcloud_placement_group.database[0].id, null) : null
-  firewall_ids       = var.firewall_create ? [hcloud_firewall.database[0].id] : []
+  servers = var.database_enabled ? {
+    "${local.name_prefix}-db" = {
+      server_type        = var.database_server_type
+      location           = var.location
+      image              = var.database_server_image
+      ssh_keys           = local.all_ssh_keys
+      backups            = var.database_server_backups_enabled
+      user_data          = local.database_user_data
+      labels             = merge(local.common_labels, { role = "database", engine = var.database_engine })
+      firewall_ids       = var.firewall_create ? [hcloud_firewall.database[0].id] : []
+      placement_group_id = var.placement_group_enabled ? try(tonumber(hcloud_placement_group.database[0].id), null) : null
+      ipv4_enabled       = var.database_server_public_ipv4_enabled
+      ipv6_enabled       = false
+      network_id         = tonumber(local.network_id)
+    }
+  } : {}
 
   depends_on = [module.network]
-}
-
-resource "hcloud_server_network" "database" {
-  count = var.database_enabled ? 1 : 0
-
-  server_id  = hcloud_server.database[0].id
-  network_id = local.network_id
 }
 
 # ==============================================================================
@@ -65,6 +58,6 @@ resource "hcloud_volume_attachment" "database" {
   count = var.database_enabled && var.database_volume_enabled ? 1 : 0
 
   volume_id = hcloud_volume.database[0].id
-  server_id = hcloud_server.database[0].id
+  server_id = module.database_server.first_id
   automount = true
 }

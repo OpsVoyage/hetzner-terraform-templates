@@ -64,7 +64,7 @@ variable "network_ip_range" {
 
 variable "network_existing_id" {
   description = "ID of an existing Hetzner Cloud network. Required when network_create = false."
-  type        = string
+  type        = number
   default     = null
 }
 
@@ -74,16 +74,22 @@ variable "network_existing_name" {
   default     = null
 }
 
-variable "network_subnet_servers" {
-  description = "CIDR for the web + backend servers subnet. Only used when network_create = true."
+variable "network_subnet_public" {
+  description = "CIDR for the public (web) tier subnet. Only used when network_create = true."
   type        = string
   default     = "10.0.1.0/24"
 }
 
-variable "network_subnet_db" {
-  description = "CIDR for the database subnet. Only used when network_create = true."
+variable "network_subnet_private" {
+  description = "CIDR for the private (backend) tier subnet. Only used when network_create = true."
   type        = string
   default     = "10.0.2.0/24"
+}
+
+variable "network_subnet_db" {
+  description = "CIDR for the database tier subnet. Only used when network_create = true."
+  type        = string
+  default     = "10.0.3.0/24"
 }
 
 # ==============================================================================

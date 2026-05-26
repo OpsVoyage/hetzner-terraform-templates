@@ -32,16 +32,16 @@ resource "hcloud_load_balancer_network" "this" {
 # ==============================================================================
 
 resource "hcloud_load_balancer_target" "web" {
-  count = var.load_balancer_enabled && var.web_server_enabled ? var.web_server_count : 0
+  for_each = var.load_balancer_enabled && var.web_server_enabled ? module.web_servers.servers : {}
 
   type             = "server"
   load_balancer_id = hcloud_load_balancer.this[0].id
-  server_id        = hcloud_server.web[count.index].id
+  server_id        = each.value.id
   use_private_ip   = true
 
   depends_on = [
     hcloud_load_balancer_network.this,
-    hcloud_server_network.web,
+    module.web_servers,
   ]
 }
 

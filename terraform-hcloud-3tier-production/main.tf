@@ -17,10 +17,15 @@ module "network" {
   # Subnets are only created alongside a new network.
   # When reusing an existing network, subnets are expected to already exist.
   subnets = var.network_create ? {
-    servers = {
+    public = {
       type         = "cloud"
       network_zone = local.network_zone
-      ip_range     = var.network_subnet_servers
+      ip_range     = var.network_subnet_public
+    }
+    private = {
+      type         = "cloud"
+      network_zone = local.network_zone
+      ip_range     = var.network_subnet_private
     }
     db = {
       type         = "cloud"

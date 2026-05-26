@@ -3,35 +3,28 @@
 # Public-facing jump host; all private server access is routed through it.
 # ==============================================================================
 
-resource "hcloud_server" "bastion" {
-  count = var.bastion_enabled ? 1 : 0
+module "bastion_server" {
+  source = "./modules/server"
 
-  name        = "${local.name_prefix}-bastion"
-  server_type = var.bastion_server_type
-  image       = var.bastion_image
-  location    = var.location
-  ssh_keys    = local.all_ssh_keys
-  user_data   = local.bastion_user_data
-  labels      = merge(local.common_labels, { role = "bastion" })
-
-  public_net {
-    ipv4_enabled = true
-    ipv6_enabled = true
-  }
-
-  firewall_ids = concat(
-    var.firewall_create ? [hcloud_firewall.bastion[0].id] : [],
-    var.bastion_additional_firewall_ids
-  )
+  servers = var.bastion_enabled ? {
+    "${local.name_prefix}-bastion" = {
+      server_type = var.bastion_server_type
+      location    = var.location
+      image       = var.bastion_image
+      ssh_keys    = local.all_ssh_keys
+      user_data   = local.bastion_user_data
+      labels      = merge(local.common_labels, { role = "bastion" })
+      firewall_ids = concat(
+        var.firewall_create ? [hcloud_firewall.bastion[0].id] : [],
+        [for id in var.bastion_additional_firewall_ids : tostring(id)]
+      )
+      ipv4_enabled = true
+      ipv6_enabled = true
+      network_id   = tonumber(local.network_id)
+    }
+  } : {}
 
   depends_on = [module.network]
-}
-
-resource "hcloud_server_network" "bastion" {
-  count = var.bastion_enabled ? 1 : 0
-
-  server_id  = hcloud_server.bastion[0].id
-  network_id = local.network_id
 }
 
 # ==============================================================================
@@ -51,5 +44,5 @@ resource "hcloud_floating_ip_assignment" "bastion" {
   count = var.bastion_enabled && var.bastion_floating_ip_enabled ? 1 : 0
 
   floating_ip_id = hcloud_floating_ip.bastion[0].id
-  server_id      = hcloud_server.bastion[0].id
+  server_id      = module.bastion_server.first_id
 }
