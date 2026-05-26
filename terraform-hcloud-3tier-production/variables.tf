@@ -16,11 +16,6 @@ variable "environment" {
   description = "Deployment environment. Controls naming and default behaviours."
   type        = string
   default     = "prod"
-
-  validation {
-    condition     = contains(["prod", "staging", "dev"], var.environment)
-    error_message = "environment must be one of: prod, staging, dev."
-  }
 }
 
 variable "location" {
