@@ -10,6 +10,12 @@
 #   - 2 web servers (private only)
 #   - 2 backend servers (private only)
 #   - Self-managed PostgreSQL database server + 100 GiB volume
+#
+# Usage:
+#   export HCLOUD_TOKEN=<your-api-token>
+#   export TF_VAR_database_root_user=dbadmin
+#   export TF_VAR_database_root_password=<your-secret>
+#   terraform init && terraform apply
 
 terraform {
   required_version = ">= 1.12.0"
@@ -22,7 +28,21 @@ terraform {
 }
 
 provider "hcloud" {
-  # Set via HCLOUD_TOKEN environment variable
+  # Token is read from the HCLOUD_TOKEN environment variable
+}
+
+# Database credentials — supply via TF_VAR_* environment variables.
+# Never commit these values to version control.
+variable "database_root_user" {
+  description = "Superuser name to create in the database engine."
+  type        = string
+  sensitive   = true
+}
+
+variable "database_root_password" {
+  description = "Superuser password for the database engine."
+  type        = string
+  sensitive   = true
 }
 
 module "infra" {
@@ -108,10 +128,12 @@ module "infra" {
 
   # ----------------------------------------------------------------------------
   # Database — self-managed PostgreSQL
-  # Credentials injected via TF_VAR_database_root_user and TF_VAR_database_root_password
+  # Credentials are forwarded from the variables declared above.
   # ----------------------------------------------------------------------------
   database_enabled                = true
   database_engine                 = "postgres"
+  database_root_user              = var.database_root_user
+  database_root_password          = var.database_root_password
   database_server_type            = "cx32"
   database_server_backups_enabled = true
   database_volume_enabled         = true
@@ -122,15 +144,48 @@ module "infra" {
 # Outputs
 # ----------------------------------------------------------------------------
 
+output "network_id" {
+  description = "Private network ID."
+  value       = module.infra.network_id
+}
+
 output "bastion_ip" {
-  value = module.infra.bastion_public_ipv4
+  description = "Public IP of the bastion (floating IP)."
+  value       = module.infra.bastion_public_ipv4
 }
 
 output "load_balancer_ip" {
-  value = module.infra.load_balancer_public_ipv4
+  description = "Public IP of the load balancer."
+  value       = module.infra.load_balancer_public_ipv4
+}
+
+output "web_server_private_ips" {
+  description = "Private IPs of the web servers."
+  value       = module.infra.web_server_private_ips
+}
+
+output "backend_server_private_ips" {
+  description = "Private IPs of the backend servers."
+  value       = module.infra.backend_server_private_ips
+}
+
+output "database_server_id" {
+  description = "Hetzner server ID of the database server."
+  value       = module.infra.database_server_id
+}
+
+output "database_private_ip" {
+  description = "Private IP of the database server."
+  value       = module.infra.database_server_private_ip
+}
+
+output "database_engine" {
+  description = "Database engine installed on the server."
+  value       = module.infra.database_engine
 }
 
 output "summary" {
-  value     = module.infra.summary
-  sensitive = false
+  description = "High-level summary of all deployed resources."
+  value       = module.infra.summary
+  sensitive   = false
 }

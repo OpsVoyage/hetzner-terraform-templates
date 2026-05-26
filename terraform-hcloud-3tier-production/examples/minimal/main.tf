@@ -6,9 +6,15 @@
 #   - Bastion with floating IP
 #   - 1 web server (public IPv4 enabled — no load balancer)
 #   - 1 backend server (private)
-#   - Self-managed database server + 50 GiB volume
+#   - Self-managed PostgreSQL database server + 50 GiB volume
 #
 # No load balancer, no HTTPS, no backups on web, single servers per tier.
+#
+# Usage:
+#   export HCLOUD_TOKEN=<your-api-token>
+#   export TF_VAR_database_root_user=dbadmin
+#   export TF_VAR_database_root_password=<your-secret>
+#   terraform init && terraform apply
 
 terraform {
   required_version = ">= 1.12.0"
@@ -21,7 +27,21 @@ terraform {
 }
 
 provider "hcloud" {
-  # Set via HCLOUD_TOKEN environment variable
+  # Token is read from the HCLOUD_TOKEN environment variable
+}
+
+# Database credentials — supply via TF_VAR_* environment variables.
+# Never commit these values to version control.
+variable "database_root_user" {
+  description = "Superuser name to create in the database engine."
+  type        = string
+  sensitive   = true
+}
+
+variable "database_root_password" {
+  description = "Superuser password for the database engine."
+  type        = string
+  sensitive   = true
 }
 
 module "infra" {
@@ -48,8 +68,9 @@ module "infra" {
   backend_server_type  = "cx22"
 
   # Self-managed PostgreSQL with a small volume
-  # Credentials: set TF_VAR_database_root_user and TF_VAR_database_root_password
   database_engine                 = "postgres"
+  database_root_user              = var.database_root_user
+  database_root_password          = var.database_root_password
   database_server_type            = "cx32"
   database_volume_enabled         = true
   database_volume_size_gb         = 50
@@ -57,13 +78,21 @@ module "infra" {
 }
 
 output "bastion_ip" {
-  value = module.infra.bastion_public_ipv4
+  description = "Public IP of the bastion."
+  value       = module.infra.bastion_public_ipv4
 }
 
 output "web_server_ips" {
-  value = module.infra.web_server_private_ips
+  description = "Private IPs of the web servers."
+  value       = module.infra.web_server_private_ips
 }
 
 output "database_private_ip" {
-  value = module.infra.database_server_private_ip
+  description = "Private IP of the database server."
+  value       = module.infra.database_server_private_ip
+}
+
+output "database_engine" {
+  description = "Database engine installed."
+  value       = module.infra.database_engine
 }
