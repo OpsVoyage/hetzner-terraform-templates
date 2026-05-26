@@ -126,34 +126,23 @@ output "backend_server_private_ips" {
 # ==============================================================================
 
 output "database_server_id" {
-  description = "Hetzner Cloud server ID of the self-managed database server (null if not self_managed)."
-  value       = var.database_enabled && var.database_mode == "self_managed" ? hcloud_server.database[0].id : null
+  description = "Hetzner Cloud server ID of the database server (null if disabled)."
+  value       = var.database_enabled ? hcloud_server.database[0].id : null
 }
 
 output "database_server_private_ip" {
-  description = "Private IPv4 of the self-managed database server within the private network."
-  value       = var.database_enabled && var.database_mode == "self_managed" ? hcloud_server_network.database[0].ip : null
+  description = "Private IPv4 of the database server within the private network."
+  value       = var.database_enabled ? hcloud_server_network.database[0].ip : null
 }
 
 output "database_volume_id" {
   description = "ID of the database block volume (null if not created)."
-  value       = var.database_enabled && var.database_mode == "self_managed" && var.database_volume_enabled ? hcloud_volume.database[0].id : null
+  value       = var.database_enabled && var.database_volume_enabled ? hcloud_volume.database[0].id : null
 }
 
-output "database_managed_id" {
-  description = "ID of the Hetzner Managed Database cluster (null if not using managed mode)."
-  value       = var.database_enabled && var.database_mode == "managed" ? hcloud_database_cluster.this[0].id : null
-}
-
-output "database_managed_host" {
-  description = "Private hostname of the Hetzner Managed Database (null if not using managed mode)."
-  value       = var.database_enabled && var.database_mode == "managed" ? hcloud_database_cluster.this[0].host : null
-  sensitive   = true
-}
-
-output "database_managed_port" {
-  description = "Port of the Hetzner Managed Database (null if not using managed mode)."
-  value       = var.database_enabled && var.database_mode == "managed" ? hcloud_database_cluster.this[0].port : null
+output "database_engine" {
+  description = "Database engine installed on the server: mysql or postgres (null if disabled)."
+  value       = var.database_enabled ? var.database_engine : null
 }
 
 # ==============================================================================
@@ -163,15 +152,9 @@ output "database_managed_port" {
 output "placement_group_ids" {
   description = "Map of tier name to placement group ID."
   value = {
-    web     = var.placement_group_enabled && var.web_server_enabled ? hcloud_placement_group.web[0].id : null
-    backend = var.placement_group_enabled && var.backend_server_enabled ? hcloud_placement_group.backend[0].id : null
-    database = (
-      var.placement_group_enabled &&
-      var.database_enabled &&
-      var.database_mode == "self_managed"
-      ? hcloud_placement_group.database[0].id
-      : null
-    )
+    web      = var.placement_group_enabled && var.web_server_enabled ? hcloud_placement_group.web[0].id : null
+    backend  = var.placement_group_enabled && var.backend_server_enabled ? hcloud_placement_group.backend[0].id : null
+    database = var.placement_group_enabled && var.database_enabled ? hcloud_placement_group.database[0].id : null
   }
 }
 
@@ -185,7 +168,7 @@ output "firewall_ids" {
     bastion  = var.firewall_create && var.bastion_enabled ? hcloud_firewall.bastion[0].id : null
     web      = var.firewall_create && var.web_server_enabled ? hcloud_firewall.web[0].id : null
     backend  = var.firewall_create && var.backend_server_enabled ? hcloud_firewall.backend[0].id : null
-    database = var.firewall_create && var.database_enabled && var.database_mode == "self_managed" ? hcloud_firewall.database[0].id : null
+    database = var.firewall_create && var.database_enabled ? hcloud_firewall.database[0].id : null
   }
 }
 
@@ -232,8 +215,8 @@ output "summary" {
     }
 
     database = var.database_enabled ? {
-      mode       = var.database_mode
-      private_ip = var.database_mode == "self_managed" ? hcloud_server_network.database[0].ip : null
+      engine     = var.database_engine
+      private_ip = hcloud_server_network.database[0].ip
     } : null
   }
 }

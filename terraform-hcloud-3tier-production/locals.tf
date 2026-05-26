@@ -66,4 +66,68 @@ locals {
   CLOUDINIT
 
   bastion_user_data = var.bastion_user_data != null ? var.bastion_user_data : local.default_bastion_user_data
+
+  # ---------------------------------------------------------------------------
+  # Database cloud-init scripts
+  #
+  # Credentials are written to a temporary SQL file (permissions 0600) and
+  # deleted after execution so they do not linger in shell history or /proc.
+  #
+  # NOTE: database_root_password must not contain single quotes.
+  # For passwords with special characters, provide a custom database_server_user_data.
+  # ---------------------------------------------------------------------------
+
+  mysql_cloud_init = <<-CLOUDINIT
+    #cloud-config
+    package_update: true
+    package_upgrade: true
+    packages:
+      - mysql-server
+    write_files:
+      - path: /root/.db-init.sql
+        permissions: "0600"
+        content: |
+          ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${var.database_root_password}';
+          CREATE USER IF NOT EXISTS '${var.database_root_user}'@'%' IDENTIFIED WITH mysql_native_password BY '${var.database_root_password}';
+          GRANT ALL PRIVILEGES ON *.* TO '${var.database_root_user}'@'%' WITH GRANT OPTION;
+          FLUSH PRIVILEGES;
+    runcmd:
+      - mysql < /root/.db-init.sql
+      - rm -f /root/.db-init.sql
+      - sed -i 's/^bind-address\s*=.*/bind-address = 0.0.0.0/' /etc/mysql/mysql.conf.d/mysqld.cnf
+      - systemctl restart mysql
+      - systemctl enable mysql
+  CLOUDINIT
+
+  postgres_cloud_init = <<-CLOUDINIT
+    #cloud-config
+    package_update: true
+    package_upgrade: true
+    packages:
+      - postgresql
+      - postgresql-contrib
+    write_files:
+      - path: /root/.db-init.sql
+        permissions: "0600"
+        content: |
+          ALTER USER postgres PASSWORD '${var.database_root_password}';
+          DO $$
+          BEGIN
+            IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '${var.database_root_user}') THEN
+              CREATE ROLE "${var.database_root_user}" WITH LOGIN SUPERUSER PASSWORD '${var.database_root_password}';
+            END IF;
+          END
+          $$;
+    runcmd:
+      - sudo -u postgres psql -f /root/.db-init.sql
+      - rm -f /root/.db-init.sql
+      - sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" /etc/postgresql/*/main/postgresql.conf
+      - echo "host all all 10.0.0.0/8 scram-sha-256" >> /etc/postgresql/*/main/pg_hba.conf
+      - systemctl restart postgresql
+      - systemctl enable postgresql
+  CLOUDINIT
+
+  database_user_data = var.database_server_user_data != null ? var.database_server_user_data : (
+    var.database_engine == "mysql" ? local.mysql_cloud_init : local.postgres_cloud_init
+  )
 }

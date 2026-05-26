@@ -21,7 +21,7 @@ resource "hcloud_placement_group" "backend" {
 }
 
 resource "hcloud_placement_group" "database" {
-  count = var.placement_group_enabled && var.database_enabled && var.database_mode == "self_managed" ? 1 : 0
+  count = var.placement_group_enabled && var.database_enabled ? 1 : 0
 
   name   = "${local.name_prefix}-db-pg"
   type   = "spread"

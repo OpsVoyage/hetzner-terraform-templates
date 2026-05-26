@@ -409,97 +409,67 @@ variable "backend_server_user_data" {
 # ==============================================================================
 
 variable "database_enabled" {
-  description = "TOGGLE — Deploy a database tier."
+  description = "TOGGLE — Deploy a database server."
   type        = bool
   default     = true
 }
 
-variable "database_mode" {
-  description = <<-EOT
-    Database deployment mode:
-      - managed      : Hetzner Cloud Managed Database (DBaaS). Requires hcloud provider >= 1.50.0.
-      - self_managed : A dedicated Hetzner Cloud server running the database engine.
-  EOT
+variable "database_engine" {
+  description = "Database engine to install via cloud-init: mysql or postgres."
   type        = string
-  default     = "managed"
+  default     = "postgres"
 
   validation {
-    condition     = contains(["managed", "self_managed"], var.database_mode)
-    error_message = "database_mode must be \"managed\" or \"self_managed\"."
+    condition     = contains(["mysql", "postgres"], var.database_engine)
+    error_message = "database_engine must be \"mysql\" or \"postgres\"."
   }
 }
 
-# --- Managed Database (Hetzner DBaaS) ---
-
-variable "database_managed_type" {
-  description = "Hetzner Managed Database plan (e.g. db1-mini, db1-small, db2-medium)."
+variable "database_root_user" {
+  description = "Superuser name created in the database at bootstrap. Supply via TF_VAR_database_root_user or an OpsVoyage layer secret."
   type        = string
-  default     = "db1-mini"
+  sensitive   = true
 }
 
-variable "database_managed_engine" {
-  description = "Managed database engine: pg (PostgreSQL) or mysql."
+variable "database_root_password" {
+  description = "Superuser password for the database. Supply via TF_VAR_database_root_password or an OpsVoyage layer secret. Never commit to version control."
   type        = string
-  default     = "pg"
-
-  validation {
-    condition     = contains(["pg", "mysql"], var.database_managed_engine)
-    error_message = "database_managed_engine must be \"pg\" or \"mysql\"."
-  }
+  sensitive   = true
 }
-
-variable "database_managed_version" {
-  description = "Major version string for the managed database engine (e.g. \"16\" for PostgreSQL 16)."
-  type        = string
-  default     = "16"
-}
-
-variable "database_managed_maintenance_dow" {
-  description = "Day-of-week for managed database maintenance window (e.g. \"sunday\")."
-  type        = string
-  default     = "sunday"
-}
-
-variable "database_managed_maintenance_time" {
-  description = "UTC time for the managed database maintenance window (HH:MM:SS, e.g. \"03:00:00\")."
-  type        = string
-  default     = "03:00:00"
-}
-
-# --- Self-managed Database Server ---
 
 variable "database_server_type" {
-  description = "Hetzner Cloud server type for the self-managed database server."
+  description = "Hetzner Cloud server type for the database server."
   type        = string
   default     = "cx42"
 }
 
 variable "database_server_image" {
-  description = "OS image for the self-managed database server."
+  description = "OS image for the database server."
   type        = string
   default     = "ubuntu-24.04"
 }
 
 variable "database_server_public_ipv4_enabled" {
-  description = "TOGGLE — Assign a public IPv4 to the self-managed database server. Strongly recommended false."
+  description = "TOGGLE — Assign a public IPv4 to the database server. Strongly recommended false — access via bastion only."
   type        = bool
   default     = false
 }
 
 variable "database_server_backups_enabled" {
-  description = "TOGGLE — Enable Hetzner Cloud automatic daily backups for the self-managed database server."
+  description = "TOGGLE — Enable Hetzner Cloud automatic daily backups for the database server."
   type        = bool
   default     = true
 }
 
 variable "database_server_user_data" {
-  description = "Cloud-init user_data script for the self-managed database server."
+  description = "Custom cloud-init user_data for the database server. When set, overrides the built-in MySQL/PostgreSQL bootstrap script."
   type        = string
   default     = null
+  sensitive   = true
 }
 
 variable "database_volume_enabled" {
-  description = "TOGGLE — Attach a dedicated Hetzner Cloud Volume to the self-managed database server for persistent data storage."
+  description = "TOGGLE — Attach a dedicated Hetzner Cloud Volume to the database server for persistent data storage."
   type        = bool
   default     = true
 }
@@ -516,7 +486,7 @@ variable "database_volume_size_gb" {
 }
 
 variable "database_volume_format" {
-  description = "Filesystem format for the database volume."
+  description = "Filesystem format for the database volume: ext4 or xfs."
   type        = string
   default     = "ext4"
 

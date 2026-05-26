@@ -9,14 +9,14 @@
 #   - Load balancer (HTTP + HTTPS with redirect)
 #   - 2 web servers (private only)
 #   - 2 backend servers (private only)
-#   - Hetzner Managed PostgreSQL database
+#   - Self-managed PostgreSQL database server + 100 GiB volume
 
 terraform {
   required_version = ">= 1.12.0"
   required_providers {
     hcloud = {
       source  = "hetznercloud/hcloud"
-      version = ">= 1.50.0"
+      version = "~> 1.63.0"
     }
   }
 }
@@ -107,15 +107,15 @@ module "infra" {
   backend_server_backups_enabled     = true
 
   # ----------------------------------------------------------------------------
-  # Database — Hetzner Managed PostgreSQL
+  # Database — self-managed PostgreSQL
+  # Credentials injected via TF_VAR_database_root_user and TF_VAR_database_root_password
   # ----------------------------------------------------------------------------
-  database_enabled                  = true
-  database_mode                     = "managed"
-  database_managed_type             = "db1-small"
-  database_managed_engine           = "pg"
-  database_managed_version          = "16"
-  database_managed_maintenance_dow  = "sunday"
-  database_managed_maintenance_time = "03:00:00"
+  database_enabled                = true
+  database_engine                 = "postgres"
+  database_server_type            = "cx32"
+  database_server_backups_enabled = true
+  database_volume_enabled         = true
+  database_volume_size_gb         = 100
 }
 
 # ----------------------------------------------------------------------------

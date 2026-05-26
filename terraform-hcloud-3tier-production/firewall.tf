@@ -109,7 +109,7 @@ resource "hcloud_firewall" "backend" {
 # ==============================================================================
 
 resource "hcloud_firewall" "database" {
-  count = var.firewall_create && var.database_enabled && var.database_mode == "self_managed" ? 1 : 0
+  count = var.firewall_create && var.database_enabled ? 1 : 0
 
   name   = "${local.name_prefix}-db-fw"
   labels = merge(local.common_labels, { role = "database" })

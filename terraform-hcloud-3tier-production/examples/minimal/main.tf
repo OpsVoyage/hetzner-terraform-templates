@@ -15,7 +15,7 @@ terraform {
   required_providers {
     hcloud = {
       source  = "hetznercloud/hcloud"
-      version = ">= 1.50.0"
+      version = "~> 1.63.0"
     }
   }
 }
@@ -47,8 +47,9 @@ module "infra" {
   backend_server_count = 1
   backend_server_type  = "cx22"
 
-  # Self-managed database with a small volume
-  database_mode                   = "self_managed"
+  # Self-managed PostgreSQL with a small volume
+  # Credentials: set TF_VAR_database_root_user and TF_VAR_database_root_password
+  database_engine                 = "postgres"
   database_server_type            = "cx32"
   database_volume_enabled         = true
   database_volume_size_gb         = 50
