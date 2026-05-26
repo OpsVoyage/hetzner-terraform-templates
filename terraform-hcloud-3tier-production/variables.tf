@@ -64,7 +64,7 @@ variable "network_ip_range" {
 
 variable "network_existing_id" {
   description = "ID of an existing Hetzner Cloud network. Required when network_create = false."
-  type        = number
+  type        = string
   default     = null
 }
 
