@@ -57,14 +57,23 @@ module "infra" {
   # SSH key — names of SSH keys already uploaded to your Hetzner Cloud project
   ssh_key_existing_names = ["your-key-name"]
 
+  # Bastion
+  bastion_enabled             = true
+  bastion_server_type         = "cx22"
+  bastion_image               = "ubuntu-24.04"
+  bastion_floating_ip_enabled = true
+  # bastion_subnet              = "public"  # default; set to "private" or "db" to override
+
   # No load balancer — give the single web server a public IP
   load_balancer_enabled          = false
   web_server_count               = 1
   web_server_public_ipv4_enabled = true
+  # web_server_subnet            = "public"  # default; set to "private" or "db" to override
 
   # Single backend
   backend_server_count = 1
   backend_server_type  = "cx22"
+  # backend_server_subnet = "private"  # default; set to "public" or "db" to override
 
   # Self-managed PostgreSQL with a small volume
   database_engine                 = "postgres"
@@ -74,6 +83,7 @@ module "infra" {
   database_volume_enabled         = true
   database_volume_size_gb         = 50
   database_server_backups_enabled = false
+  # database_server_subnet          = "db"  # default; set to "public" or "private" to override
 }
 
 output "bastion_ip" {

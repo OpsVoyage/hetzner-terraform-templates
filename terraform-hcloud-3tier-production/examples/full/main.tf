@@ -141,6 +141,7 @@ module "infra" {
   database_server_backups_enabled = true
   database_volume_enabled         = true
   database_volume_size_gb         = 100
+  # database_server_subnet          = "db"  # default; set to "public" or "private" to override
 }
 
 # ----------------------------------------------------------------------------
