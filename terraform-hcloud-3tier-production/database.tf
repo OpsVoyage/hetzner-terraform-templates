@@ -30,7 +30,7 @@ module "database_server" {
       ipv4_enabled       = var.database_server_public_ipv4_enabled
       ipv6_enabled       = false
       network_id         = tonumber(local.network_id)
-      subnet_id          = module.network.subnets["db"].id
+      subnet_id          = module.network.subnets[var.database_server_subnet].id
       network_enabled    = true
     }
   } : {}

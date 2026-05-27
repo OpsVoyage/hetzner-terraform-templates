@@ -169,6 +169,17 @@ variable "bastion_additional_firewall_ids" {
   default     = []
 }
 
+variable "bastion_subnet" {
+  description = "Which subnet to attach the bastion to. Must match a key in the network subnets map (\"public\", \"private\", or \"db\")."
+  type        = string
+  default     = "public"
+
+  validation {
+    condition     = contains(["public", "private", "db"], var.bastion_subnet)
+    error_message = "bastion_subnet must be one of: public, private, db."
+  }
+}
+
 # ==============================================================================
 # LOAD BALANCER
 # ==============================================================================
@@ -324,6 +335,17 @@ variable "web_server_user_data" {
   default     = null
 }
 
+variable "web_server_subnet" {
+  description = "Which subnet to attach web servers to. Must match a key in the network subnets map (\"public\", \"private\", or \"db\")."
+  type        = string
+  default     = "public"
+
+  validation {
+    condition     = contains(["public", "private", "db"], var.web_server_subnet)
+    error_message = "web_server_subnet must be one of: public, private, db."
+  }
+}
+
 # ==============================================================================
 # BACKEND / APPLICATION SERVERS
 # ==============================================================================
@@ -379,6 +401,17 @@ variable "backend_server_user_data" {
   description = "Cloud-init user_data script applied to every backend server."
   type        = string
   default     = null
+}
+
+variable "backend_server_subnet" {
+  description = "Which subnet to attach backend servers to. Must match a key in the network subnets map (\"public\", \"private\", or \"db\")."
+  type        = string
+  default     = "private"
+
+  validation {
+    condition     = contains(["public", "private", "db"], var.backend_server_subnet)
+    error_message = "backend_server_subnet must be one of: public, private, db."
+  }
 }
 
 # ==============================================================================
@@ -470,6 +503,17 @@ variable "database_volume_format" {
   validation {
     condition     = contains(["ext4", "xfs"], var.database_volume_format)
     error_message = "database_volume_format must be ext4 or xfs."
+  }
+}
+
+variable "database_server_subnet" {
+  description = "Which subnet to attach the database server to. Must match a key in the network subnets map (\"public\", \"private\", or \"db\")."
+  type        = string
+  default     = "db"
+
+  validation {
+    condition     = contains(["public", "private", "db"], var.database_server_subnet)
+    error_message = "database_server_subnet must be one of: public, private, db."
   }
 }
 

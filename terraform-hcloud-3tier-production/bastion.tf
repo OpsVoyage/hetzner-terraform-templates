@@ -21,7 +21,7 @@ module "bastion_server" {
       ipv4_enabled    = true
       ipv6_enabled    = true
       network_id      = tonumber(local.network_id)
-      subnet_id       = module.network.subnets["public"].id
+      subnet_id       = module.network.subnets[var.bastion_subnet].id
       network_enabled = true
     }
   } : {}

@@ -22,7 +22,7 @@ module "backend_servers" {
       ipv4_enabled       = var.backend_server_public_ipv4_enabled
       ipv6_enabled       = var.backend_server_public_ipv6_enabled
       network_id         = tonumber(local.network_id)
-      subnet_id          = module.network.subnets["private"].id
+      subnet_id          = module.network.subnets[var.backend_server_subnet].id
       network_enabled    = true
     }
   } : {}

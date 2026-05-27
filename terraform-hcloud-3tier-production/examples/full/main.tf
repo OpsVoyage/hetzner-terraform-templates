@@ -91,6 +91,7 @@ module "infra" {
   bastion_server_type         = "cx22"
   bastion_image               = "ubuntu-24.04"
   bastion_floating_ip_enabled = true
+  # bastion_subnet              = "public"  # default; set to "private" or "db" to override
 
   # ----------------------------------------------------------------------------
   # Load balancer
@@ -115,6 +116,7 @@ module "infra" {
   web_server_image               = "ubuntu-24.04"
   web_server_public_ipv4_enabled = false
   web_server_backups_enabled     = false
+  # web_server_subnet            = "public"  # default; set to "private" or "db" to override
 
   # ----------------------------------------------------------------------------
   # Backend servers
@@ -125,6 +127,7 @@ module "infra" {
   backend_server_image               = "ubuntu-24.04"
   backend_server_public_ipv4_enabled = false
   backend_server_backups_enabled     = true
+  # backend_server_subnet             = "private"  # default; set to "public" or "db" to override
 
   # ----------------------------------------------------------------------------
   # Database — self-managed PostgreSQL
