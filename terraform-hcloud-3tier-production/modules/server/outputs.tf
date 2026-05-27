@@ -7,7 +7,7 @@ output "servers" {
       ipv4        = s.ipv4_address
       ipv6        = s.ipv6_address
       status      = s.status
-      private_ips = try([hcloud_server_network.this[k].ip], [])
+      private_ips = try([for n in hcloud_server.this[k].network : n.ip], [])
     }
   }
 }
@@ -24,7 +24,7 @@ output "names" {
 
 output "private_ips" {
   description = "Flat list of private network IPs across all servers (sorted by name)."
-  value       = flatten([for k in sort(keys(hcloud_server.this)) : try([hcloud_server_network.this[k].ip], [])])
+  value       = flatten([for k in sort(keys(hcloud_server.this)) : try([for n in hcloud_server.this[k].network : n.ip], [])])
 }
 
 # ---------------------------------------------------------------------------
@@ -49,5 +49,5 @@ output "first_ipv4" {
 
 output "first_private_ip" {
   description = "First private network IP of the first server — intended for single-server modules."
-  value       = try(hcloud_server_network.this[keys(hcloud_server.this)[0]].ip, null)
+  value       = try(one([for n in hcloud_server.this[keys(hcloud_server.this)[0]].network : n.ip]), null)
 }

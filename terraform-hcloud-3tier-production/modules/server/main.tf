@@ -1,12 +1,16 @@
 # ==============================================================================
 # SERVER MODULE
 #
-# Creates Hetzner Cloud servers and attaches them to a private network via a
-# separate hcloud_server_network resource.
+# Creates Hetzner Cloud servers and attaches them to a private network via an
+# inline `network {}` block so the interface exists from the moment the server
+# boots (Hetzner requires at least one interface).
 #
-# Note: The inline `network {}` block inside hcloud_server triggers a bug in
-# hcloud provider v1.63.0 (validateUniqueNetworkIDs panics on unknown values
-# at plan time). Using a separate resource avoids this entirely.
+# The dynamic block's for_each uses the static `network_enabled` boolean
+# (always known at plan time) so key stability is guaranteed even when
+# `subnet_id` is "(known after apply)" on a fresh network. `network_id` is
+# intentionally never set inside the block — passing an unknown network_id
+# triggers the validateUniqueNetworkIDs CustomizeDiff panic in hcloud
+# provider v1.63.0.
 # ==============================================================================
 
 resource "hcloud_server" "this" {
@@ -28,29 +32,20 @@ resource "hcloud_server" "this" {
     ipv6_enabled = each.value.ipv6_enabled
   }
 
-  lifecycle {
-    ignore_changes = [ssh_keys, user_data]
+  # Attach to private subnet at creation time (required when public IPs are
+  # disabled). The for_each key is the static network_enabled bool so it is
+  # always known at plan time. subnet_id may be unknown on a new network;
+  # that is fine inside content {} — it resolves at apply time.
+  dynamic "network" {
+    for_each = each.value.network_enabled ? [1] : []
+    content {
+      subnet_id = each.value.subnet_id
+      ip        = each.value.ip
+      alias_ips = each.value.alias_ips
+    }
   }
-}
 
-# Attach each server to its private network after creation.
-# Kept separate from hcloud_server to avoid the validateUniqueNetworkIDs
-# CustomizeDiff panic that occurs when network_id is unknown at plan time.
-#
-# subnet_id is preferred — it uniquely identifies both the network and the
-# subnet tier (public / private / db). network_id alone is the fallback and
-# attaches the server to the last subnet ordered by ip_range.
-resource "hcloud_server_network" "this" {
-  # Filter using the static network_enabled flag so for_each keys are always
-  # known at plan time (subnet_id / network_id are unknown until apply).
-  for_each = { for k, v in var.servers : k => v if v.network_enabled }
-
-  server_id = hcloud_server.this[each.key].id
-
-  # Use subnet_id when available; fall back to network_id.
-  subnet_id  = each.value.subnet_id
-  network_id = each.value.subnet_id == null ? each.value.network_id : null
-
-  ip        = each.value.ip
-  alias_ips = each.value.alias_ips
+  lifecycle {
+    ignore_changes = [ssh_keys, user_data, network]
+  }
 }
