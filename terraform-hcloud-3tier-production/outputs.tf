@@ -26,15 +26,7 @@ output "network_subnets" {
 # SSH KEY
 # ==============================================================================
 
-output "ssh_key_id" {
-  description = "ID of the Hetzner Cloud SSH key created by this stack (null if ssh_key_create = false)."
-  value       = var.ssh_key_create ? hcloud_ssh_key.this[0].id : null
-}
-
-output "ssh_key_name" {
-  description = "Name of the Hetzner Cloud SSH key (null if ssh_key_create = false)."
-  value       = var.ssh_key_create ? hcloud_ssh_key.this[0].name : null
-}
+# ssh_key_id and ssh_key_name outputs removed — stack uses pre-existing SSH keys (ssh_key_create removed)
 
 # ==============================================================================
 # BASTION

@@ -35,14 +35,4 @@ module "network" {
   } : {}
 }
 
-# ==============================================================================
-# SSH KEYS
-# ==============================================================================
 
-resource "hcloud_ssh_key" "this" {
-  count = var.ssh_key_create ? 1 : 0
-
-  name       = coalesce(var.ssh_key_name, "${local.name_prefix}-key")
-  public_key = var.ssh_key_public_key
-  labels     = local.common_labels
-}

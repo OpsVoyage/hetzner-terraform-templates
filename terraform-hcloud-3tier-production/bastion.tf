@@ -15,12 +15,14 @@ module "bastion_server" {
       user_data   = local.bastion_user_data
       labels      = merge(local.common_labels, { role = "bastion" })
       firewall_ids = concat(
-        var.firewall_create ? [hcloud_firewall.bastion[0].id] : [],
+        var.firewall_create ? [tostring(hcloud_firewall.bastion[0].id)] : [],
         [for id in var.bastion_additional_firewall_ids : tostring(id)]
       )
-      ipv4_enabled = true
-      ipv6_enabled = true
-      network_id   = tonumber(local.network_id)
+      ipv4_enabled    = true
+      ipv6_enabled    = true
+      network_id      = tonumber(local.network_id)
+      subnet_id       = module.network.subnets["public"].id
+      network_enabled = true
     }
   } : {}
 

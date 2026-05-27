@@ -34,13 +34,9 @@ locals {
   )
 
   # ---------------------------------------------------------------------------
-  # SSH keys: combine newly-created key with any pre-existing ones.
-  # hcloud_server.ssh_keys accepts names or IDs.
+  # SSH keys: use existing keys only (ssh_key_existing_names variable).
   # ---------------------------------------------------------------------------
-  all_ssh_keys = concat(
-    var.ssh_key_create ? [hcloud_ssh_key.this[0].name] : [],
-    var.ssh_key_existing_names
-  )
+  all_ssh_keys = var.ssh_key_existing_names
 
   # ---------------------------------------------------------------------------
   # Resolved network ID from the network module
