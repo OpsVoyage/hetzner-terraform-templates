@@ -70,19 +70,19 @@ variable "network_existing_name" {
 }
 
 variable "network_subnet_public" {
-  description = "CIDR for the public (web) tier subnet. Only used when network_create = true."
+  description = "CIDR for the public (web) tier subnet. Used to create the subnet when network_create = true; must match the existing subnet CIDR when network_create = false."
   type        = string
   default     = "10.0.1.0/24"
 }
 
 variable "network_subnet_private" {
-  description = "CIDR for the private (backend) tier subnet. Only used when network_create = true."
+  description = "CIDR for the private (backend) tier subnet. Used to create the subnet when network_create = true; must match the existing subnet CIDR when network_create = false."
   type        = string
   default     = "10.0.2.0/24"
 }
 
 variable "network_subnet_db" {
-  description = "CIDR for the database tier subnet. Only used when network_create = true."
+  description = "CIDR for the database tier subnet. Used to create the subnet when network_create = true; must match the existing subnet CIDR when network_create = false."
   type        = string
   default     = "10.0.3.0/24"
 }
