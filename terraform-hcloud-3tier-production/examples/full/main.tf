@@ -2,7 +2,7 @@
 #
 # Provisions:
 #   - New private network (10.0.0.0/16)
-#   - SSH key upload
+#   - Existing SSH key referenced by name
 #   - Firewalls for every tier
 #   - Spread placement groups
 #   - Bastion with floating IP
@@ -69,10 +69,9 @@ module "infra" {
   network_subnet_db      = "10.0.3.0/24"
 
   # ----------------------------------------------------------------------------
-  # SSH key
+  # SSH key — names of SSH keys already uploaded to your Hetzner Cloud project
   # ----------------------------------------------------------------------------
-  ssh_key_create     = true
-  ssh_key_public_key = file("~/.ssh/id_ed25519.pub")
+  ssh_key_existing_names = ["your-key-name"]
 
   # ----------------------------------------------------------------------------
   # Firewalls

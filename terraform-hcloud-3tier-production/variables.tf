@@ -91,30 +91,6 @@ variable "network_subnet_db" {
 # SSH KEYS
 # ==============================================================================
 
-variable "ssh_key_create" {
-  description = "TOGGLE — Upload a new SSH public key and attach it to all servers."
-  type        = bool
-  default     = true
-}
-
-variable "ssh_key_name" {
-  description = "Name for the SSH key in Hetzner Cloud. Defaults to <project>-<env>-key when omitted."
-  type        = string
-  default     = null
-}
-
-variable "ssh_key_public_key" {
-  description = "SSH public key content (e.g. contents of ~/.ssh/id_ed25519.pub). Required when ssh_key_create = true."
-  type        = string
-  default     = null
-  sensitive   = true
-
-  validation {
-    condition     = !var.ssh_key_create || (var.ssh_key_public_key != null && trimspace(var.ssh_key_public_key) != "")
-    error_message = "ssh_key_public_key must be provided when ssh_key_create = true."
-  }
-}
-
 variable "ssh_key_existing_names" {
   description = "Names of pre-existing Hetzner Cloud SSH keys to add to every server."
   type        = list(string)

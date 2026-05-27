@@ -2,7 +2,7 @@
 #
 # Provisions:
 #   - New private network
-#   - SSH key upload
+#   - Existing SSH key referenced by name
 #   - Bastion with floating IP
 #   - 1 web server (public IPv4 enabled — no load balancer)
 #   - 1 backend server (private)
@@ -54,9 +54,8 @@ module "infra" {
   # Network
   network_create = true
 
-  # SSH key
-  ssh_key_create     = true
-  ssh_key_public_key = file("~/.ssh/id_ed25519.pub")
+  # SSH key — names of SSH keys already uploaded to your Hetzner Cloud project
+  ssh_key_existing_names = ["your-key-name"]
 
   # No load balancer — give the single web server a public IP
   load_balancer_enabled          = false
