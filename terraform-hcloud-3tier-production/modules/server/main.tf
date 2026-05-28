@@ -1,15 +1,17 @@
 # ==============================================================================
 # SERVER MODULE
 #
-# Creates Hetzner Cloud servers and attaches them to a private network via a
-# separate `hcloud_server_network` resource.
+# Creates Hetzner Cloud servers and attaches them to a private network via an
+# inline `network {}` block so that the attachment is part of the CREATE call.
 #
-# The inline `network {}` block is intentionally NOT used because hcloud
-# provider v1.63.0 introduced a CustomizeDiff validation that fires for any
-# server that has both `network_id` (computed by Hetzner after creation) and
-# `subnet_id` stored in state, causing plan failures on subsequent runs.
-# The `hcloud_server_network` resource has supported `subnet_id` since
-# provider v1.56.0 and does not have this validation issue.
+# This is required by the hcloud API when both `ipv4_enabled` and
+# `ipv6_enabled` are false — the server must have at least one interface at
+# creation time.
+#
+# hcloud provider v1.63.0 introduced a CustomizeDiff that fires on subsequent
+# plans when `subnet_id` (set by us) and the computed `network_id` both appear
+# in state. We suppress that re-plan with `lifecycle.ignore_changes = [network]`.
+# The initial apply still applies the block correctly; only updates are skipped.
 # ==============================================================================
 
 resource "hcloud_server" "this" {
@@ -31,19 +33,20 @@ resource "hcloud_server" "this" {
     ipv6_enabled = each.value.ipv6_enabled
   }
 
-  lifecycle {
-    ignore_changes = [ssh_keys, user_data]
+  dynamic "network" {
+    for_each = each.value.network_enabled ? [each.value] : []
+    content {
+      subnet_id = network.value.subnet_id
+      ip        = network.value.ip != "" ? network.value.ip : null
+      alias_ips = network.value.alias_ips
+    }
   }
-}
 
-# Attach servers to their private subnet via a separate resource.
-# This avoids the hcloud provider v1.63.0 CustomizeDiff bug where having both
-# `network_id` (Hetzner-computed) and `subnet_id` in state causes plan errors.
-resource "hcloud_server_network" "this" {
-  for_each = { for k, v in var.servers : k => v if v.network_enabled }
-
-  server_id = hcloud_server.this[each.key].id
-  subnet_id = each.value.subnet_id
-  ip        = each.value.ip != "" ? each.value.ip : null
-  alias_ips = each.value.alias_ips
+  lifecycle {
+    # ssh_keys / user_data: standard drift-ignore for bootstrapped servers.
+    # network: suppress the hcloud provider v1.63.0 CustomizeDiff that fires
+    # when both the computed `network_id` and our `subnet_id` are in state.
+    # The block is still applied on initial creation; subsequent plans are a no-op.
+    ignore_changes = [ssh_keys, user_data, network]
+  }
 }
