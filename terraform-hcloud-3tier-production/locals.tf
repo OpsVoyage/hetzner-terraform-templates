@@ -44,24 +44,28 @@ locals {
   network_id = module.network.network_id
 
   # ---------------------------------------------------------------------------
-  # Resolved subnet IDs used when attaching servers to the private network.
+  # Resolved subnet IDs per tier.
   #
-  # When network_create = true  → IDs come from the created hcloud_network_subnet
-  #                               resources exposed via module.network.subnets.
-  # When network_create = false → IDs are constructed as "{network_id}-{ip_range}",
-  #                               which is how the hcloud provider assigns resource
-  #                               IDs to hcloud_network_subnet objects.  The CIDR
-  #                               values in network_subnet_public / _private / _db
-  #                               must match the actual subnets in the existing
-  #                               network (default 10.0.1-3.0/24).
+  # network_create = true  → auto-assigned from the subnets this stack creates:
+  #   bastion  → public
+  #   web      → private (behind LB) or public (no LB)
+  #   backend  → private
+  #   database → db
+  #
+  # network_create = false → caller supplies *_subnet_id variables directly
+  #   (Hetzner resource ID format: "{network_id}-{cidr}")
   # ---------------------------------------------------------------------------
-  subnet_ids = var.network_create ? {
-    for key, subnet in module.network.subnets : key => subnet.id
-    } : {
-    public  = "${module.network.network_id}-${var.network_subnet_public}"
-    private = "${module.network.network_id}-${var.network_subnet_private}"
-    db      = "${module.network.network_id}-${var.network_subnet_db}"
-  }
+  bastion_subnet_id = var.network_create ? module.network.subnets["public"].id : var.bastion_subnet_id
+
+  web_server_subnet_id = var.network_create ? (
+    var.load_balancer_enabled
+    ? module.network.subnets["private"].id
+    : module.network.subnets["public"].id
+  ) : var.web_server_subnet_id
+
+  backend_server_subnet_id = var.network_create ? module.network.subnets["private"].id : var.backend_server_subnet_id
+
+  database_server_subnet_id = var.network_create ? module.network.subnets["db"].id : var.database_server_subnet_id
 
   # ---------------------------------------------------------------------------
   # Default bastion cloud-init: minimal hardening (ufw + fail2ban)

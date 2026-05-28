@@ -70,21 +70,52 @@ variable "network_existing_name" {
 }
 
 variable "network_subnet_public" {
-  description = "CIDR for the public (web) tier subnet. Used to create the subnet when network_create = true; must match the existing subnet CIDR when network_create = false."
+  description = "CIDR for the public subnet created when network_create = true."
   type        = string
   default     = "10.0.1.0/24"
 }
 
 variable "network_subnet_private" {
-  description = "CIDR for the private (backend) tier subnet. Used to create the subnet when network_create = true; must match the existing subnet CIDR when network_create = false."
+  description = "CIDR for the private subnet created when network_create = true."
   type        = string
   default     = "10.0.2.0/24"
 }
 
 variable "network_subnet_db" {
-  description = "CIDR for the database tier subnet. Used to create the subnet when network_create = true; must match the existing subnet CIDR when network_create = false."
+  description = "CIDR for the database subnet created when network_create = true."
   type        = string
   default     = "10.0.3.0/24"
+}
+
+# ==============================================================================
+# SUBNET ID OVERRIDES (network_create = false only)
+# When using an existing network, provide the Hetzner subnet resource IDs
+# (format: "{network_id}-{cidr}", e.g. "12345678-10.0.1.0/24").
+# These are ignored when network_create = true — subnets are auto-assigned.
+# ==============================================================================
+
+variable "bastion_subnet_id" {
+  description = "Subnet ID to attach the bastion to. Required when network_create = false."
+  type        = string
+  default     = null
+}
+
+variable "web_server_subnet_id" {
+  description = "Subnet ID to attach web servers to. Required when network_create = false."
+  type        = string
+  default     = null
+}
+
+variable "backend_server_subnet_id" {
+  description = "Subnet ID to attach backend servers to. Required when network_create = false."
+  type        = string
+  default     = null
+}
+
+variable "database_server_subnet_id" {
+  description = "Subnet ID to attach the database server to. Required when network_create = false."
+  type        = string
+  default     = null
 }
 
 # ==============================================================================
@@ -169,11 +200,7 @@ variable "bastion_additional_firewall_ids" {
   default     = []
 }
 
-variable "bastion_subnet" {
-  description = "Which subnet key to attach the bastion to. Must match a key in the network subnets map."
-  type        = string
-  default     = "public"
-}
+
 
 # ==============================================================================
 # LOAD BALANCER
@@ -330,11 +357,7 @@ variable "web_server_user_data" {
   default     = null
 }
 
-variable "web_server_subnet" {
-  description = "Which subnet key to attach web servers to. Must match a key in the network subnets map."
-  type        = string
-  default     = "public"
-}
+
 
 # ==============================================================================
 # BACKEND / APPLICATION SERVERS
@@ -393,11 +416,7 @@ variable "backend_server_user_data" {
   default     = null
 }
 
-variable "backend_server_subnet" {
-  description = "Which subnet key to attach backend servers to. Must match a key in the network subnets map."
-  type        = string
-  default     = "private"
-}
+
 
 # ==============================================================================
 # DATABASE
@@ -491,8 +510,4 @@ variable "database_volume_format" {
   }
 }
 
-variable "database_server_subnet" {
-  description = "Which subnet key to attach the database server to. Must match a key in the network subnets map."
-  type        = string
-  default     = "db"
-}
+

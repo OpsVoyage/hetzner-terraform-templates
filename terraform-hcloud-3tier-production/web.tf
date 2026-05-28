@@ -23,7 +23,7 @@ module "web_servers" {
       ipv4_enabled       = var.web_server_public_ipv4_enabled
       ipv6_enabled       = var.web_server_public_ipv6_enabled
       network_id         = tonumber(local.network_id)
-      subnet_id          = local.subnet_ids[var.web_server_subnet]
+      subnet_id          = local.web_server_subnet_id
       network_enabled    = true
     }
   } : {}
