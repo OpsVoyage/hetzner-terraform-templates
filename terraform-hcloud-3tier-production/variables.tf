@@ -289,8 +289,8 @@ variable "web_server_count" {
   default     = 2
 
   validation {
-    condition     = var.web_server_count >= 1
-    error_message = "web_server_count must be at least 1."
+    condition     = var.web_server_count >= 0
+    error_message = "web_server_count must be a non-negative number (0 disables the tier)."
   }
 }
 
@@ -352,8 +352,8 @@ variable "backend_server_count" {
   default     = 2
 
   validation {
-    condition     = var.backend_server_count >= 1
-    error_message = "backend_server_count must be at least 1."
+    condition     = var.backend_server_count >= 0
+    error_message = "backend_server_count must be a non-negative number (0 disables the tier)."
   }
 }
 
@@ -475,8 +475,8 @@ variable "database_volume_size_gb" {
   default     = 100
 
   validation {
-    condition     = var.database_volume_size_gb >= 10
-    error_message = "database_volume_size_gb must be at least 10 GiB."
+    condition     = var.database_volume_size_gb == 0 || var.database_volume_size_gb >= 10
+    error_message = "database_volume_size_gb must be at least 10 GiB (or 0 when database tier is disabled)."
   }
 }
 
