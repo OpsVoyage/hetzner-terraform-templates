@@ -1,17 +1,16 @@
 # ==============================================================================
 # SERVER MODULE
 #
-# Creates Hetzner Cloud servers and attaches them to a private network via an
-# inline `network {}` block so that the attachment is part of the CREATE call.
+# Creates Hetzner Cloud servers with an inline `network {}` block so the
+# subnet attachment is part of the CREATE call.
 #
 # This is required by the hcloud API when both `ipv4_enabled` and
 # `ipv6_enabled` are false — the server must have at least one interface at
 # creation time.
 #
-# hcloud provider v1.63.0 introduced a CustomizeDiff that fires on subsequent
-# plans when `subnet_id` (set by us) and the computed `network_id` both appear
-# in state. We suppress that re-plan with `lifecycle.ignore_changes = [network]`.
-# The initial apply still applies the block correctly; only updates are skipped.
+# hcloud provider v1.63.0 introduced a CustomizeDiff that incorrectly errored
+# when both `subnet_id` (config) and the computed `network_id` coexisted in
+# state. This was fixed in v1.64.0 (#1430). We require >= 1.64.0.
 # ==============================================================================
 
 resource "hcloud_server" "this" {
@@ -43,10 +42,6 @@ resource "hcloud_server" "this" {
   }
 
   lifecycle {
-    # ssh_keys / user_data: standard drift-ignore for bootstrapped servers.
-    # network: suppress the hcloud provider v1.63.0 CustomizeDiff that fires
-    # when both the computed `network_id` and our `subnet_id` are in state.
-    # The block is still applied on initial creation; subsequent plans are a no-op.
-    ignore_changes = [ssh_keys, user_data, network]
+    ignore_changes = [ssh_keys, user_data]
   }
 }
