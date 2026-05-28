@@ -516,15 +516,3 @@ variable "database_server_subnet" {
     error_message = "database_server_subnet must be one of: public, private, db."
   }
 }
-
-variable "database_managed_engine" {
-  description = "Reserved for future managed database engine support. Not used by the current self-hosted stack."
-  type        = string
-  default     = null
-}
-
-variable "database_mode" {
-  description = "Reserved for future database deployment mode support (e.g. standalone, cluster)."
-  type        = string
-  default     = null
-}

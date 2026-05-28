@@ -1,0 +1,25 @@
+# Local .terraform directory (provider cache, downloaded modules)
+**/.terraform/
+
+# State files
+*.tfstate
+*.tfstate.*
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Sensitive variable files
+*.tfvars
+*.tfvars.json
+
+# Override files (local-only customisations)
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Backend configuration files (may contain credentials)
+*.tfbackend
+
+# .terraform.lock.hcl pins provider versions — always commit it
