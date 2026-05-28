@@ -29,6 +29,15 @@ locals {
     for dc in data.hcloud_datacenters.all.datacenters : dc
     if dc.location.name == var.location
   ]
+
+  # Server types with no available capacity in the target location
+  unavailable_server_types = [
+    for type_name in local.active_server_types : type_name
+    if !anytrue([
+      for dc in local.location_datacenters :
+      contains(dc.available_server_type_ids, data.hcloud_server_type.checked[type_name].id)
+    ])
+  ]
 }
 
 data "hcloud_server_type" "checked" {
@@ -36,17 +45,11 @@ data "hcloud_server_type" "checked" {
   name     = each.value
 }
 
-# Single check across all active server types. Emits a warning (not a hard
-# error) during plan so users can change types before apply fails.
+# Warns during plan if any enabled server type has no current capacity in the
+# target location — before apply fails with the cryptic resource_unavailable.
 check "server_type_capacity" {
   assert {
-    condition = alltrue([
-      for type_name in local.active_server_types :
-      anytrue([
-        for dc in local.location_datacenters :
-        contains(dc.available_server_type_ids, data.hcloud_server_type.checked[type_name].id)
-      ])
-    ])
-    error_message = "One or more server types have no current capacity in location '${var.location}'. ARM types (cax*) are prone to this — switch to the equivalent x86 type (e.g. cx22 instead of cax11). Check availability: curl -s -H 'Authorization: Bearer $HCLOUD_TOKEN' 'https://api.hetzner.cloud/v1/datacenters?location=${var.location}' | jq '.datacenters[].server_types.available'"
+    condition     = length(local.unavailable_server_types) == 0
+    error_message = "No capacity for server type(s) [${join(", ", local.unavailable_server_types)}] in location '${var.location}'. ARM types (cax*) are often constrained — switch to the x86 equivalent (e.g. cx22 instead of cax11, cpx21 instead of cax21)."
   }
 }
