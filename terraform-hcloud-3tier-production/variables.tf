@@ -170,14 +170,9 @@ variable "bastion_additional_firewall_ids" {
 }
 
 variable "bastion_subnet" {
-  description = "Which subnet to attach the bastion to. Must match a key in the network subnets map (\"public\", \"private\", or \"db\")."
+  description = "Which subnet key to attach the bastion to. Must match a key in the network subnets map."
   type        = string
   default     = "public"
-
-  validation {
-    condition     = contains(["public", "private", "db"], var.bastion_subnet)
-    error_message = "bastion_subnet must be one of: public, private, db."
-  }
 }
 
 # ==============================================================================
@@ -336,14 +331,9 @@ variable "web_server_user_data" {
 }
 
 variable "web_server_subnet" {
-  description = "Which subnet to attach web servers to. Must match a key in the network subnets map (\"public\", \"private\", or \"db\")."
+  description = "Which subnet key to attach web servers to. Must match a key in the network subnets map."
   type        = string
   default     = "public"
-
-  validation {
-    condition     = contains(["public", "private", "db"], var.web_server_subnet)
-    error_message = "web_server_subnet must be one of: public, private, db."
-  }
 }
 
 # ==============================================================================
@@ -404,14 +394,9 @@ variable "backend_server_user_data" {
 }
 
 variable "backend_server_subnet" {
-  description = "Which subnet to attach backend servers to. Must match a key in the network subnets map (\"public\", \"private\", or \"db\")."
+  description = "Which subnet key to attach backend servers to. Must match a key in the network subnets map."
   type        = string
   default     = "private"
-
-  validation {
-    condition     = contains(["public", "private", "db"], var.backend_server_subnet)
-    error_message = "backend_server_subnet must be one of: public, private, db."
-  }
 }
 
 # ==============================================================================
@@ -507,12 +492,7 @@ variable "database_volume_format" {
 }
 
 variable "database_server_subnet" {
-  description = "Which subnet to attach the database server to. Must match a key in the network subnets map (\"public\", \"private\", or \"db\")."
+  description = "Which subnet key to attach the database server to. Must match a key in the network subnets map."
   type        = string
   default     = "db"
-
-  validation {
-    condition     = contains(["public", "private", "db"], var.database_server_subnet)
-    error_message = "database_server_subnet must be one of: public, private, db."
-  }
 }
