@@ -118,6 +118,12 @@ variable "database_server_subnet_id" {
   default     = null
 }
 
+variable "load_balancer_subnet_id" {
+  description = "Subnet ID to attach the load balancer to when network_create = false. Format: \"{network_id}-{cidr}\", e.g. \"12345678-10.0.1.0/24\". Ignored when network_create = true (uses the private subnet automatically)."
+  type        = string
+  default     = null
+}
+
 # ==============================================================================
 # SSH KEYS
 # ==============================================================================

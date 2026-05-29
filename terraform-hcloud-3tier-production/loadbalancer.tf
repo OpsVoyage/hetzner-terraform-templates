@@ -22,6 +22,7 @@ resource "hcloud_load_balancer_network" "this" {
 
   load_balancer_id        = hcloud_load_balancer.this[0].id
   network_id              = local.network_id
+  subnet_id               = local.load_balancer_subnet_id
   enable_public_interface = !var.load_balancer_private_only
 
   depends_on = [module.network]

@@ -67,6 +67,8 @@ locals {
 
   database_server_subnet_id = var.network_create ? module.network.subnets["db"].id : var.database_server_subnet_id
 
+  load_balancer_subnet_id = var.network_create ? module.network.subnets["private"].id : var.load_balancer_subnet_id
+
   # ---------------------------------------------------------------------------
   # Default bastion cloud-init: minimal hardening (ufw + fail2ban)
   # ---------------------------------------------------------------------------
