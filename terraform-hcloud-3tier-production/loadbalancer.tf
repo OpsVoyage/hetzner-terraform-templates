@@ -21,7 +21,7 @@ resource "hcloud_load_balancer_network" "this" {
   count = var.load_balancer_enabled ? 1 : 0
 
   load_balancer_id        = hcloud_load_balancer.this[0].id
-  network_id              = local.network_id
+  network_id              = local.load_balancer_subnet_id == null ? local.network_id : null
   subnet_id               = local.load_balancer_subnet_id
   enable_public_interface = !var.load_balancer_private_only
 
