@@ -172,6 +172,26 @@ locals {
     packages:
       - mysql-server
     write_files:
+      - path: /etc/netplan/51-private.yaml
+        permissions: "0600"
+        content: |
+          network:
+            version: 2
+            ethernets:
+              private:
+                match:
+                  name: "enp*"
+                dhcp4: true
+                dhcp4-overrides:
+                  use-routes: false
+                  use-dns: false
+                nameservers:
+                  addresses: [8.8.8.8, 8.8.4.4]
+                routes:
+                  - to: default
+                    via: 10.0.0.1
+                  - to: 10.0.0.0/8
+                    via: 10.0.0.1
       - path: /root/.db-init.sql
         permissions: "0600"
         content: |
@@ -180,8 +200,9 @@ locals {
           GRANT ALL PRIVILEGES ON *.* TO '${var.database_root_user}'@'%' WITH GRANT OPTION;
           FLUSH PRIVILEGES;
     runcmd:
-      - systemctl disable --now hc-utils 2>/dev/null || true
-      - ip route add default via ${cidrhost(var.network_subnet_db, 1)} 2>/dev/null || true
+      - netplan apply
+      - sed -i 's/#DNS=/DNS=8.8.8.8 8.8.4.4/' /etc/systemd/resolved.conf
+      - systemctl restart systemd-resolved
       - mysql < /root/.db-init.sql
       - rm -f /root/.db-init.sql
       - sed -i 's/^bind-address\s*=.*/bind-address = 0.0.0.0/' /etc/mysql/mysql.conf.d/mysqld.cnf
@@ -208,9 +229,30 @@ locals {
             END IF;
           END
           $$;
+      - path: /etc/netplan/51-private.yaml
+        permissions: "0600"
+        content: |
+          network:
+            version: 2
+            ethernets:
+              private:
+                match:
+                  name: "enp*"
+                dhcp4: true
+                dhcp4-overrides:
+                  use-routes: false
+                  use-dns: false
+                nameservers:
+                  addresses: [8.8.8.8, 8.8.4.4]
+                routes:
+                  - to: default
+                    via: 10.0.0.1
+                  - to: 10.0.0.0/8
+                    via: 10.0.0.1
     runcmd:
-      - systemctl disable --now hc-utils 2>/dev/null || true
-      - ip route add default via ${cidrhost(var.network_subnet_db, 1)} 2>/dev/null || true
+      - netplan apply
+      - sed -i 's/#DNS=/DNS=8.8.8.8 8.8.4.4/' /etc/systemd/resolved.conf
+      - systemctl restart systemd-resolved
       - sudo -u postgres psql -f /root/.db-init.sql
       - rm -f /root/.db-init.sql
       - sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" /etc/postgresql/*/main/postgresql.conf
