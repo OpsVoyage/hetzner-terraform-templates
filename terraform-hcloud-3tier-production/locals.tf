@@ -92,6 +92,30 @@ locals {
   bastion_user_data = var.bastion_user_data != null ? var.bastion_user_data : local.default_bastion_user_data
 
   # ---------------------------------------------------------------------------
+  # Default web / backend cloud-init.
+  #
+  # When nat_gateway_enabled = true, private servers (no public IP) need:
+  #   1. hc-utils disabled — otherwise Hetzner's DHCP helper deletes our
+  #      manually added default route on every DHCP renewal.
+  #   2. A default route via the subnet gateway (10.0.2.1) so traffic leaves
+  #      via the private interface → Hetzner SDN applies the network_route
+  #      (0.0.0.0/0 → NAT gateway) and forwards it to the internet.
+  # ---------------------------------------------------------------------------
+  _nat_web_backend_user_data = <<-CLOUDINIT
+    #cloud-config
+    package_update: true
+    package_upgrade: true
+    runcmd:
+      - systemctl disable --now hc-utils 2>/dev/null || true
+      - ip route add default via ${cidrhost(var.network_subnet_private, 1)} 2>/dev/null || true
+  CLOUDINIT
+
+  default_web_backend_user_data = var.nat_gateway_enabled ? local._nat_web_backend_user_data : null
+
+  web_server_user_data     = var.web_server_user_data != null ? var.web_server_user_data : local.default_web_backend_user_data
+  backend_server_user_data = var.backend_server_user_data != null ? var.backend_server_user_data : local.default_web_backend_user_data
+
+  # ---------------------------------------------------------------------------
   # Database cloud-init scripts
   #
   # Credentials are written to a temporary SQL file (permissions 0600) and
@@ -116,6 +140,8 @@ locals {
           GRANT ALL PRIVILEGES ON *.* TO '${var.database_root_user}'@'%' WITH GRANT OPTION;
           FLUSH PRIVILEGES;
     runcmd:
+      - systemctl disable --now hc-utils 2>/dev/null || true
+      - ip route add default via ${cidrhost(var.network_subnet_db, 1)} 2>/dev/null || true
       - mysql < /root/.db-init.sql
       - rm -f /root/.db-init.sql
       - sed -i 's/^bind-address\s*=.*/bind-address = 0.0.0.0/' /etc/mysql/mysql.conf.d/mysqld.cnf
@@ -143,6 +169,8 @@ locals {
           END
           $$;
     runcmd:
+      - systemctl disable --now hc-utils 2>/dev/null || true
+      - ip route add default via ${cidrhost(var.network_subnet_db, 1)} 2>/dev/null || true
       - sudo -u postgres psql -f /root/.db-init.sql
       - rm -f /root/.db-init.sql
       - sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" /etc/postgresql/*/main/postgresql.conf

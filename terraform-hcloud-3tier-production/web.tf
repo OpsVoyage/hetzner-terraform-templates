@@ -16,7 +16,7 @@ module "web_servers" {
       image              = var.web_server_image
       ssh_keys           = local.all_ssh_keys
       backups            = var.web_server_backups_enabled
-      user_data          = var.web_server_user_data
+      user_data          = local.web_server_user_data
       labels             = merge(local.common_labels, { role = "web", index = tostring(i + 1) })
       firewall_ids       = var.firewall_create ? [hcloud_firewall.web[0].id] : []
       placement_group_id = var.placement_group_enabled && var.web_server_enabled ? tonumber(hcloud_placement_group.web[0].id) : null

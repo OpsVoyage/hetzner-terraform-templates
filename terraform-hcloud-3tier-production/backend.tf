@@ -15,7 +15,7 @@ module "backend_servers" {
       image              = var.backend_server_image
       ssh_keys           = local.all_ssh_keys
       backups            = var.backend_server_backups_enabled
-      user_data          = var.backend_server_user_data
+      user_data          = local.backend_server_user_data
       labels             = merge(local.common_labels, { role = "backend", index = tostring(i + 1) })
       firewall_ids       = var.firewall_create ? [hcloud_firewall.backend[0].id] : []
       placement_group_id = var.placement_group_enabled && var.backend_server_enabled ? tonumber(hcloud_placement_group.backend[0].id) : null
