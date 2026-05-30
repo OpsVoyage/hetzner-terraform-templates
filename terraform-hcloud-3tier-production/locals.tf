@@ -88,9 +88,7 @@ locals {
           network:
             version: 2
             ethernets:
-              private:
-                match:
-                  name: "enp*"
+              enp7s0:
                 dhcp4: true
                 dhcp4-overrides:
                   use-routes: false
@@ -130,9 +128,7 @@ locals {
           network:
             version: 2
             ethernets:
-              private:
-                match:
-                  name: "enp*"
+              enp7s0:
                 dhcp4: true
                 dhcp4-overrides:
                   use-routes: false
@@ -178,9 +174,7 @@ locals {
           network:
             version: 2
             ethernets:
-              private:
-                match:
-                  name: "enp*"
+              enp7s0:
                 dhcp4: true
                 dhcp4-overrides:
                   use-routes: false
@@ -235,9 +229,7 @@ locals {
           network:
             version: 2
             ethernets:
-              private:
-                match:
-                  name: "enp*"
+              enp7s0:
                 dhcp4: true
                 dhcp4-overrides:
                   use-routes: false

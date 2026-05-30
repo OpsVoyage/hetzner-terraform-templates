@@ -44,7 +44,7 @@ locals {
           net.ipv4.ip_forward = 1
           net.ipv6.conf.all.forwarding = 1
 
-      # Configure the private network interface (enp7s0 on x86, enp1s0 on ARM).
+      # Configure the private network interface (enp7s0).
       # use-routes: false prevents DHCP from adding a second default route that
       # would override the public eth0 default.
       - path: /etc/netplan/51-private.yaml
@@ -53,9 +53,7 @@ locals {
           network:
             version: 2
             ethernets:
-              private:
-                match:
-                  name: "enp*"
+              enp7s0:
                 dhcp4: true
                 dhcp4-overrides:
                   use-routes: false
