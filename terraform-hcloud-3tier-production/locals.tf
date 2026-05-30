@@ -70,9 +70,9 @@ locals {
   load_balancer_subnet_id = var.network_create ? module.network.subnets["private"].id : var.load_balancer_subnet_id
 
   # ---------------------------------------------------------------------------
-  # Default bastion cloud-init: server hardening only (ufw + fail2ban).
-  # NAT gateway functionality is handled by the dedicated nat-gateway server
-  # in the terraform-hcloud-network module when nat_gateway_enabled = true.
+  # Default bastion cloud-init: configure private network interface + hardening.
+  # Servers with a public IP do not get their private interface auto-configured
+  # by Hetzner on Ubuntu 24.04, so we add a netplan stanza for it.
   # ---------------------------------------------------------------------------
   default_bastion_user_data = <<-CLOUDINIT
     #cloud-config
@@ -81,7 +81,25 @@ locals {
     packages:
       - fail2ban
       - ufw
+    write_files:
+      - path: /etc/netplan/51-private.yaml
+        permissions: '0600'
+        content: |
+          network:
+            version: 2
+            ethernets:
+              private:
+                match:
+                  name: "enp*"
+                dhcp4: true
+                dhcp4-overrides:
+                  use-routes: false
+                  use-dns: false
+                routes:
+                  - to: 10.0.0.0/8
+                    via: 10.0.0.1
     runcmd:
+      - netplan apply
       - ufw default deny incoming
       - ufw default allow outgoing
       - ufw allow 22/tcp
@@ -106,8 +124,7 @@ locals {
     package_update: true
     package_upgrade: true
     runcmd:
-      - systemctl disable --now hc-utils 2>/dev/null || true
-      - ip route add default via ${cidrhost(var.network_subnet_private, 1)} 2>/dev/null || true
+      - ip route replace default via 10.0.0.1 2>/dev/null || true
   CLOUDINIT
 
   default_web_backend_user_data = var.nat_gateway_enabled ? local._nat_web_backend_user_data : null

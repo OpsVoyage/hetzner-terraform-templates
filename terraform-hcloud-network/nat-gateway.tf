@@ -29,11 +29,34 @@ resource "hcloud_firewall" "nat_gateway" {
   name   = "${local.nat_gateway_name}-fw"
   labels = merge(var.labels, var.nat_gateway_labels, { role = "nat-gateway" })
 
+  # SSH from allowed external CIDRs and from the private network (via bastion)
   rule {
     direction  = "in"
     protocol   = "tcp"
     port       = "22"
-    source_ips = var.nat_gateway_ssh_allowed_cidrs
+    source_ips = concat(var.nat_gateway_ssh_allowed_cidrs, [var.subnet_private, var.subnet_db])
+  }
+
+  # ICMP (ping) from anywhere for diagnostics
+  rule {
+    direction  = "in"
+    protocol   = "icmp"
+    source_ips = ["0.0.0.0/0", "::/0"]
+  }
+
+  # Allow all traffic from the private network so forwarded packets are accepted
+  rule {
+    direction  = "in"
+    protocol   = "tcp"
+    port       = "any"
+    source_ips = [var.subnet_private, var.subnet_db]
+  }
+
+  rule {
+    direction  = "in"
+    protocol   = "udp"
+    port       = "any"
+    source_ips = [var.subnet_private, var.subnet_db]
   }
 }
 

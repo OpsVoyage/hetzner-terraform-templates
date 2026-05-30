@@ -39,11 +39,33 @@ locals {
 
     write_files:
       - path: /etc/sysctl.d/99-nat-gateway.conf
+        permissions: '0644'
         content: |
           net.ipv4.ip_forward = 1
           net.ipv6.conf.all.forwarding = 1
 
+      # Configure the private network interface (enp7s0 on x86, enp1s0 on ARM).
+      # use-routes: false prevents DHCP from adding a second default route that
+      # would override the public eth0 default.
+      - path: /etc/netplan/51-private.yaml
+        permissions: '0600'
+        content: |
+          network:
+            version: 2
+            ethernets:
+              private:
+                match:
+                  name: "enp*"
+                dhcp4: true
+                dhcp4-overrides:
+                  use-routes: false
+                  use-dns: false
+                routes:
+                  - to: 10.0.0.0/8
+                    via: 10.0.0.1
+
     runcmd:
+      - netplan apply
       - sysctl -p /etc/sysctl.d/99-nat-gateway.conf
       - |
         PUBLIC_IF=$(ip route show default | awk '/default/ {print $5; exit}')
