@@ -123,8 +123,31 @@ locals {
     #cloud-config
     package_update: true
     package_upgrade: true
+    write_files:
+      - path: /etc/netplan/51-private.yaml
+        permissions: "0600"
+        content: |
+          network:
+            version: 2
+            ethernets:
+              private:
+                match:
+                  name: "enp*"
+                dhcp4: true
+                dhcp4-overrides:
+                  use-routes: false
+                  use-dns: false
+                nameservers:
+                  addresses: [8.8.8.8, 8.8.4.4]
+                routes:
+                  - to: default
+                    via: 10.0.0.1
+                  - to: 10.0.0.0/8
+                    via: 10.0.0.1
     runcmd:
-      - ip route replace default via 10.0.0.1 2>/dev/null || true
+      - netplan apply
+      - sed -i 's/#DNS=/DNS=8.8.8.8 8.8.4.4/' /etc/systemd/resolved.conf
+      - systemctl restart systemd-resolved
   CLOUDINIT
 
   default_web_backend_user_data = var.nat_gateway_enabled ? local._nat_web_backend_user_data : null
