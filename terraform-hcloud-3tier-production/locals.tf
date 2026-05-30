@@ -70,7 +70,9 @@ locals {
   load_balancer_subnet_id = var.network_create ? module.network.subnets["private"].id : var.load_balancer_subnet_id
 
   # ---------------------------------------------------------------------------
-  # Default bastion cloud-init: minimal hardening (ufw + fail2ban)
+  # Default bastion cloud-init: server hardening only (ufw + fail2ban).
+  # NAT gateway functionality is handled by the dedicated nat-gateway server
+  # in the terraform-hcloud-network module when nat_gateway_enabled = true.
   # ---------------------------------------------------------------------------
   default_bastion_user_data = <<-CLOUDINIT
     #cloud-config

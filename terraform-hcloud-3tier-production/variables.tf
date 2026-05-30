@@ -206,6 +206,43 @@ variable "bastion_additional_firewall_ids" {
   default     = []
 }
 
+# ==============================================================================
+# NAT GATEWAY
+# A dedicated small server in the public subnet that masquerades outbound
+# internet traffic for private-only servers (web, backend, database).
+# Managed by the terraform-hcloud-network module when network_create = true.
+# ==============================================================================
+
+variable "nat_gateway_enabled" {
+  description = "TOGGLE — Deploy a dedicated NAT gateway server so private-only servers can reach the internet. Requires network_create = true."
+  type        = bool
+  default     = true
+}
+
+variable "nat_gateway_server_type" {
+  description = "Hetzner Cloud server type for the NAT gateway. A small server (cx22) is sufficient."
+  type        = string
+  default     = "cx22"
+}
+
+variable "nat_gateway_image" {
+  description = "OS image for the NAT gateway server."
+  type        = string
+  default     = "ubuntu-24.04"
+}
+
+variable "nat_gateway_ip" {
+  description = "Static private IP for the NAT gateway within the public subnet. Defaults to the second usable host (e.g. 10.0.1.2)."
+  type        = string
+  default     = null
+}
+
+variable "nat_gateway_floating_ip_enabled" {
+  description = "TOGGLE — Assign a floating IPv4 to the NAT gateway for a stable public egress IP."
+  type        = bool
+  default     = false
+}
+
 
 
 # ==============================================================================
