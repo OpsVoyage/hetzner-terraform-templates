@@ -1,6 +1,6 @@
 # ==============================================================================
 # BASTION FIREWALL
-# Allows SSH from configurable source CIDRs and ICMP.
+# Allows SSH from configurable source CIDRs only.
 # ==============================================================================
 
 resource "hcloud_firewall" "bastion" {
@@ -17,17 +17,11 @@ resource "hcloud_firewall" "bastion" {
     description = "SSH access from allowed source CIDRs"
   }
 
-  rule {
-    direction   = "in"
-    protocol    = "icmp"
-    source_ips  = ["0.0.0.0/0", "::/0"]
-    description = "ICMP (ping) from anywhere"
-  }
 }
 
 # ==============================================================================
 # WEB SERVER FIREWALL
-# Allows HTTP traffic (from LB or internet) and SSH from the private network.
+# Allows HTTP traffic (from LB or internet) and SSH from the private network. No ICMP.
 # ==============================================================================
 
 resource "hcloud_firewall" "web" {
@@ -52,12 +46,6 @@ resource "hcloud_firewall" "web" {
     description = "SSH from private network (via bastion)"
   }
 
-  rule {
-    direction   = "in"
-    protocol    = "icmp"
-    source_ips  = [var.network_ip_range]
-    description = "ICMP within private network"
-  }
 }
 
 # ==============================================================================
@@ -95,12 +83,6 @@ resource "hcloud_firewall" "backend" {
     description = "SSH from private network (via bastion)"
   }
 
-  rule {
-    direction   = "in"
-    protocol    = "icmp"
-    source_ips  = [var.network_ip_range]
-    description = "ICMP within private network"
-  }
 }
 
 # ==============================================================================
@@ -136,12 +118,5 @@ resource "hcloud_firewall" "database" {
     port        = "22"
     source_ips  = [var.network_ip_range]
     description = "SSH from private network (via bastion)"
-  }
-
-  rule {
-    direction   = "in"
-    protocol    = "icmp"
-    source_ips  = [var.network_ip_range]
-    description = "ICMP within private network"
   }
 }
